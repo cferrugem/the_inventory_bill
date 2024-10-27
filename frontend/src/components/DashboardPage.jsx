@@ -16,6 +16,7 @@ const DashboardPage = () => {
   const [writeOffEan, setWriteOffEan] = useState(""); // Estado para o EAN no formulário de baixa de estoque
   const [writeOffAmount, setWriteOffAmount] = useState(0); // Estado para o valor de baixa de estoque
   const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState(""); // Estado para o termo de pesquisa
 
   // Busca os snacks da API quando o componente é montado
   useEffect(() => {
@@ -225,16 +226,25 @@ const DashboardPage = () => {
     navigate("/");
   };
 
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value.toLowerCase()); // Converte para minúsculas para pesquisa insensível a maiúsculas
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-6">
-      <h1 className="text-2xl font-bold mb-4">Bem-vindo ao Painel de Snacks</h1>
-      <button
-        onClick={handleLogout}
-        className="mb-4 p-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-      >
-        Sair
-      </button>
-
+      <h1 className="text-3xl font-extrabold text-gray-800">
+        Bem-vindo ao Painel de Insumos
+      </h1>
+      <div className="flex justify-between items-center mb-6">
+        <span className="text-lg"></span>{" "}
+        {/* Replace with actual user name */}
+        <button
+          onClick={handleLogout}
+          className="px-4 py-2 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600 transition-colors duration-200"
+        >
+          Sair
+        </button>
+      </div>
       <form
         onSubmit={handleAddSnack}
         className="mb-8 bg-white p-4 rounded shadow-md"
@@ -263,7 +273,7 @@ const DashboardPage = () => {
             <p className={`${eanMessageColor} text-sm`}>{eanMessage}</p>
           </div>
           <div>
-            <label className="block mb-1">Quantidade</label>
+            <label className="block mb-1">Estoque</label>
             <input
               type="number"
               value={quantity}
@@ -400,69 +410,86 @@ const DashboardPage = () => {
           Dar Baixa no Estoque
         </button>
       </form>
+
+      <input
+        type="text"
+        placeholder="Pesquisar snack..."
+        value={searchTerm}
+        onChange={handleSearchChange}
+        className="mb-4 p-2 border border-gray-300 rounded w-full"
+      />
+
       <h2 className="text-xl font-semibold mb-2">Insumos Atuais</h2>
       <div className="overflow-x-auto">
-        <table className="min-w-full bg-white border border-gray-300">
-          <thead>
-            <tr>
-              <th className="border-b px-4 py-2">Descrição do Insumo</th>
-              <th className="border-b px-4 py-2">EAN</th>
-              <th className="border-b px-4 py-2">Quantidade</th>
-              <th className="border-b px-4 py-2">Mínimo de Reposição</th>
-              <th className="border-b px-4 py-2">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {snacks.map((snack) => (
-              <tr key={snack.id} className="hover:bg-gray-100">
-                <td
-                  className={`border-b px-4 py-2 ${
-                    snack.quantity < snack.min_replenishment
-                      ? "text-red-600"
-                      : ""
-                  }`}
-                >
-                  {snack.name}
-                </td>
-                <td
-                  className={`border-b px-4 py-2 ${
-                    snack.quantity < snack.min_replenishment
-                      ? "text-red-600"
-                      : ""
-                  }`}
-                >
-                  {snack.ean}
-                </td>
-                <td
-                  className={`border-b px-4 py-2 ${
-                    snack.quantity < snack.min_replenishment
-                      ? "text-red-600"
-                      : ""
-                  }`}
-                >
-                  {snack.quantity}
-                </td>
-                <td
-                  className={`border-b px-4 py-2 ${
-                    snack.quantity < snack.min_replenishment
-                      ? "text-red-600"
-                      : ""
-                  }`}
-                >
-                  {snack.min_replenishment}
-                </td>
-                <td className="border-b px-4 py-2">
-                  <button
-                    onClick={() => handleRemoveSnack(snack.id)}
-                    className="text-red-500 hover:text-red-700"
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {snacks
+            .filter((snack) => snack.name.toLowerCase().includes(searchTerm))
+            .map((snack) => (
+              <div
+                key={snack.id}
+                className={`p-4 border border-gray-300 rounded-lg shadow-md ${
+                  snack.quantity < snack.min_replenishment
+                    ? "bg-red-50"
+                    : "bg-white"
+                }`}
+              >
+                <div className="mb-2">
+                  <span className="font-bold">Descrição do Insumo: </span>
+                  <span
+                    className={`${
+                      snack.quantity < snack.min_replenishment
+                        ? "text-red-600"
+                        : ""
+                    }`}
                   >
-                    Remover
-                  </button>
-                </td>
-              </tr>
+                    {snack.name}
+                  </span>
+                </div>
+                <div className="mb-2">
+                  <span className="font-bold">EAN: </span>
+                  <span
+                    className={`${
+                      snack.quantity < snack.min_replenishment
+                        ? "text-red-600"
+                        : ""
+                    }`}
+                  >
+                    {snack.ean}
+                  </span>
+                </div>
+                <div className="mb-2">
+                  <span className="font-bold">Estoque: </span>
+                  <span
+                    className={`${
+                      snack.quantity < snack.min_replenishment
+                        ? "text-red-600"
+                        : ""
+                    }`}
+                  >
+                    {snack.quantity}
+                  </span>
+                </div>
+                <div className="mb-2">
+                  <span className="font-bold">Ponto Mínimo de Reposição: </span>
+                  <span
+                    className={`${
+                      snack.quantity < snack.min_replenishment
+                        ? "text-red-600"
+                        : ""
+                    }`}
+                  >
+                    {snack.min_replenishment}
+                  </span>
+                </div>
+                <button
+                  onClick={() => handleRemoveSnack(snack.id)}
+                  className="text-red-500 hover:text-red-700 mt-2"
+                >
+                  Remover
+                </button>
+              </div>
             ))}
-          </tbody>
-        </table>
+        </div>
       </div>
     </div>
   );
