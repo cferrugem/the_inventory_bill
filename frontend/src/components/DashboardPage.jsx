@@ -434,7 +434,7 @@ const DashboardPage = () => {
                 }`}
               >
                 <div className="mb-2">
-                  <span className="font-bold">Descrição do Insumo: </span>
+                  <span className="font-bold">Descrição: </span>
                   <span
                     className={`${
                       snack.quantity < snack.min_replenishment
