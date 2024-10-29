@@ -2,52 +2,47 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const DashboardPage = () => {
-  const [snacks, setSnacks] = useState([]); // Estado para armazenar snacks
-  const [snackName, setSnackName] = useState(""); // Estado para o nome do snack
-  const [ean, setEan] = useState(""); // Estado para o EAN
-  const [quantity, setQuantity] = useState(0); // Estado para a quantidade
-  const [minReplenishment, setMinReplenishment] = useState(0); // Estado para o mínimo de reposição
-  const [eanMessage, setEanMessage] = useState(""); // Estado para a mensagem de validação do EAN
-  const [eanMessageColor, setEanMessageColor] = useState(""); // Estado para a cor da mensagem
-  const [stockChangeEan, setStockChangeEan] = useState(""); // Estado para o EAN no formulário de alteração de estoque
-  const [changeAmount, setChangeAmount] = useState(0); // Estado para o valor de alteração de estoque
-  const [minReplenishmentEan, setMinReplenishmentEan] = useState(""); // Estado para o EAN no formulário de alteração do mínimo de reposição
-  const [newMinReplenishment, setNewMinReplenishment] = useState(0); // Estado para o novo valor de mínimo de reposição
-  const [writeOffEan, setWriteOffEan] = useState(""); // Estado para o EAN no formulário de baixa de estoque
-  const [writeOffAmount, setWriteOffAmount] = useState(0); // Estado para o valor de baixa de estoque
+  const [snacks, setSnacks] = useState([]);
+  const [snackName, setSnackName] = useState("");
+  const [ean, setEan] = useState("");
+  const [quantity, setQuantity] = useState(0);
+  const [minReplenishment, setMinReplenishment] = useState(0);
+  const [eanMessage, setEanMessage] = useState("");
+  const [eanMessageColor, setEanMessageColor] = useState("");
+  const [stockChangeEan, setStockChangeEan] = useState("");
+  const [changeAmount, setChangeAmount] = useState(0);
+  const [minReplenishmentEan, setMinReplenishmentEan] = useState("");
+  const [newMinReplenishment, setNewMinReplenishment] = useState(0);
+  const [writeOffEan, setWriteOffEan] = useState("");
+  const [writeOffAmount, setWriteOffAmount] = useState(0);
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState(""); // Estado para o termo de pesquisa
+  const [searchTerm, setSearchTerm] = useState("");
 
-  // Busca os snacks da API quando o componente é montado
+  const fetchSnacks = async () => {
+    const response = await fetch("http://localhost:3000/api/snacks");
+    const data = await response.json();
+    setSnacks(data);
+  };
+
   useEffect(() => {
-    const fetchSnacks = async () => {
-      const response = await fetch("http://localhost:3000/api/snacks");
-      const data = await response.json();
-      setSnacks(data);
-    };
     fetchSnacks();
   }, []);
 
-  // Manipula a adição de um novo snack
   const handleAddSnack = async (e) => {
     e.preventDefault();
-
-    // Valida o EAN
     if (ean.length !== 13) {
       setEanMessage("O EAN deve ter exatamente 13 dígitos.");
       setEanMessageColor("text-red-600");
       return;
     }
 
-    // Cria um novo objeto snack com os campos corretos, transformando o nome em maiúsculas
     const newSnack = {
-      name: snackName.toUpperCase(), // Transforma o nome do snack em maiúsculas
+      name: snackName.toUpperCase(),
       ean,
       quantity,
       min_replenishment: minReplenishment,
     };
 
-    // Envia um POST para adicionar o snack
     const response = await fetch("http://localhost:3000/api/snacks", {
       method: "POST",
       headers: {
@@ -57,21 +52,17 @@ const DashboardPage = () => {
     });
 
     if (response.ok) {
-      const addedSnack = await response.json();
-      setSnacks((prev) => [...prev, addedSnack]);
-      // Reseta os campos do formulário
+      await fetchSnacks(); // Atualiza a lista após a adição
       setSnackName("");
       setEan("");
       setQuantity(0);
       setMinReplenishment(0);
-      setEanMessage(""); // Limpa a mensagem de erro
+      setEanMessage("");
     }
   };
 
-  // Manipula a alteração de estoque (aumento ou redução)
   const handleChangeStock = async (e) => {
     e.preventDefault();
-
     const snackToUpdate = snacks.find((snack) => snack.ean === stockChangeEan);
     if (!snackToUpdate) {
       alert("Snack não encontrado!");
@@ -79,13 +70,11 @@ const DashboardPage = () => {
     }
 
     const newQuantity = snackToUpdate.quantity + changeAmount;
-
     if (newQuantity < 0) {
       alert("A quantidade não pode ser negativa!");
       return;
     }
 
-    // Envia um PUT para atualizar a quantidade de estoque do snack
     const response = await fetch(
       `http://localhost:3000/api/snacks/${snackToUpdate.id}`,
       {
@@ -98,12 +87,7 @@ const DashboardPage = () => {
     );
 
     if (response.ok) {
-      const updatedSnack = await response.json();
-      setSnacks((prev) =>
-        prev.map((snack) =>
-          snack.id === updatedSnack.id ? updatedSnack : snack
-        )
-      );
+      await fetchSnacks(); // Atualiza a lista após a alteração de estoque
       setStockChangeEan("");
       setChangeAmount(0);
     } else {
@@ -111,10 +95,8 @@ const DashboardPage = () => {
     }
   };
 
-  // Manipula a alteração do mínimo de reposição
   const handleChangeMinReplenishment = async (e) => {
     e.preventDefault();
-
     const snackToUpdate = snacks.find(
       (snack) => snack.ean === minReplenishmentEan
     );
@@ -123,7 +105,6 @@ const DashboardPage = () => {
       return;
     }
 
-    // Envia um PUT para atualizar o mínimo de reposição
     const response = await fetch(
       `http://localhost:3000/api/snacks/${snackToUpdate.id}`,
       {
@@ -139,12 +120,7 @@ const DashboardPage = () => {
     );
 
     if (response.ok) {
-      const updatedSnack = await response.json();
-      setSnacks((prev) =>
-        prev.map((snack) =>
-          snack.id === updatedSnack.id ? updatedSnack : snack
-        )
-      );
+      await fetchSnacks(); // Atualiza a lista após a alteração do mínimo de reposição
       setMinReplenishmentEan("");
       setNewMinReplenishment(0);
     } else {
@@ -152,10 +128,8 @@ const DashboardPage = () => {
     }
   };
 
-  // Manipula a baixa de estoque
   const handleWriteOffStock = async (e) => {
     e.preventDefault();
-
     const snackToUpdate = snacks.find((snack) => snack.ean === writeOffEan);
     if (!snackToUpdate) {
       alert("Snack não encontrado!");
@@ -163,13 +137,11 @@ const DashboardPage = () => {
     }
 
     const newQuantity = snackToUpdate.quantity - writeOffAmount;
-
     if (newQuantity < 0) {
       alert("A quantidade da baixa não pode resultar em estoque negativo!");
       return;
     }
 
-    // Envia um PUT para atualizar a quantidade de estoque do snack
     const response = await fetch(
       `http://localhost:3000/api/snacks/${snackToUpdate.id}`,
       {
@@ -182,12 +154,7 @@ const DashboardPage = () => {
     );
 
     if (response.ok) {
-      const updatedSnack = await response.json();
-      setSnacks((prev) =>
-        prev.map((snack) =>
-          snack.id === updatedSnack.id ? updatedSnack : snack
-        )
-      );
+      await fetchSnacks(); // Atualiza a lista após a baixa de estoque
       setWriteOffEan("");
       setWriteOffAmount(0);
     } else {
@@ -200,7 +167,6 @@ const DashboardPage = () => {
     if (value.length <= 13 && /^\d*$/.test(value)) {
       setEan(value);
       const remainingDigits = 13 - value.length;
-
       if (value.length === 13) {
         setEanMessage("EAN completo!");
         setEanMessageColor("text-green-600");
@@ -213,12 +179,11 @@ const DashboardPage = () => {
     }
   };
 
-  // Manipula a remoção de um snack
   const handleRemoveSnack = async (id) => {
     await fetch(`http://localhost:3000/api/snacks/${id}`, {
       method: "DELETE",
     });
-    setSnacks((prev) => prev.filter((snack) => snack.id !== id));
+    await fetchSnacks(); // Atualiza a lista após a remoção
   };
 
   const handleLogout = () => {
@@ -227,34 +192,37 @@ const DashboardPage = () => {
   };
 
   const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value.toLowerCase()); // Converte para minúsculas para pesquisa insensível a maiúsculas
+    setSearchTerm(e.target.value.toLowerCase());
   };
 
+  const filteredSnacks = snacks.filter(snack =>
+    snack.name.toLowerCase().includes(searchTerm) || snack.ean.includes(searchTerm)
+  );
+
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
+   <div className="min-h-screen bg-gray-100 p-6">
+    <div className="flex justify-between items-center mb-6">
       <h1 className="text-3xl font-extrabold text-gray-800">
         Bem-vindo ao Painel de Insumos
       </h1>
-      <div className="flex justify-between items-center mb-6">
-        <span className="text-lg"></span>{" "}
-        {/* Replace with actual user name */}
-        <button
-          onClick={handleLogout}
-          className="px-4 py-2 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600 transition-colors duration-200"
-        >
-          Sair
-        </button>
-      </div>
-      <form
-        onSubmit={handleAddSnack}
-        className="mb-8 bg-white p-4 rounded shadow-md"
-      >
-        <h2 className="text-xl font-semibold mb-2">Adicionar um Novo Snack</h2>
+    <button
+      onClick={handleLogout}
+      className="px-4 py-2 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600 transition-colors duration-200"
+    >
+      Sair
+    </button>
+  </div>
+
+
+      {/* Formulário para adicionar um novo item */}
+      <form onSubmit={handleAddSnack} className="mb-8 bg-white p-4 rounded shadow-md">
+        <h2 className="text-xl font-semibold mb-2">Adicionar um novo item</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block mb-1">Nome do Snack</label>
+            <label className="block mb-1">Nome do Insumo</label>
             <input
               type="text"
+              placeholder="Nome do Insumo"
               value={snackName}
               onChange={(e) => setSnackName(e.target.value)}
               required
@@ -265,17 +233,21 @@ const DashboardPage = () => {
             <label className="block mb-1">EAN</label>
             <input
               type="text"
+              placeholder="EAN"
               value={ean}
               onChange={handleEanChange}
               required
               className="w-full p-2 border border-gray-300 rounded"
             />
-            <p className={`${eanMessageColor} text-sm`}>{eanMessage}</p>
+            {eanMessage && (
+              <p className={eanMessageColor}>{eanMessage}</p>
+            )}
           </div>
           <div>
             <label className="block mb-1">Estoque</label>
             <input
               type="number"
+              placeholder="Quantidade"
               value={quantity}
               onChange={(e) => setQuantity(Number(e.target.value))}
               required
@@ -283,9 +255,10 @@ const DashboardPage = () => {
             />
           </div>
           <div>
-            <label className="block mb-1">Ponto de Reposição</label>
+            <label className="block mb-1">Mínimo de Reposição</label>
             <input
               type="number"
+              placeholder="Mínimo de Reposição"
               value={minReplenishment}
               onChange={(e) => setMinReplenishment(Number(e.target.value))}
               required
@@ -293,25 +266,20 @@ const DashboardPage = () => {
             />
           </div>
         </div>
-        <button
-          type="submit"
-          className="mt-4 w-full p-2 bg-green-500 text-white rounded hover:bg-green-600"
-        >
+        <button type="submit" className="mt-4 px-4 py-2 bg-green-500 text-white font-semibold rounded-lg shadow-md hover:bg-green-600 transition-colors duration-200">
           Adicionar Insumo
         </button>
       </form>
 
-      {/* Formulário de Alteração de Estoque */}
-      <form
-        onSubmit={handleChangeStock}
-        className="mb-8 bg-white p-4 rounded shadow-md"
-      >
-        <h2 className="text-xl font-semibold mb-2">Somar no Estoque</h2>
+      {/* Formulário para alteração de estoque */}
+      <form onSubmit={handleChangeStock} className="mt-8 bg-white p-4 rounded shadow-md">
+        <h2 className="text-xl font-semibold mb-2">Adicionar ou Remover do Estoque</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block mb-1">EAN do Insumo</label>
             <input
               type="text"
+              placeholder="EAN"
               value={stockChangeEan}
               onChange={(e) => setStockChangeEan(e.target.value)}
               required
@@ -319,9 +287,10 @@ const DashboardPage = () => {
             />
           </div>
           <div>
-            <label className="block mb-1">Quantidade a Alterar</label>
+            <label className="block mb-1">Quantidade a Alterar (+ ou -)</label>
             <input
               type="number"
+              placeholder="Quantidade"
               value={changeAmount}
               onChange={(e) => setChangeAmount(Number(e.target.value))}
               required
@@ -329,27 +298,20 @@ const DashboardPage = () => {
             />
           </div>
         </div>
-        <button
-          type="submit"
-          className="mt-4 w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
+        <button type="submit" className="mt-4 px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-200">
           Alterar Estoque
         </button>
       </form>
 
-      {/* Formulário de Alteração do Mínimo de Reposição */}
-      <form
-        onSubmit={handleChangeMinReplenishment}
-        className="mb-8 bg-white p-4 rounded shadow-md"
-      >
-        <h2 className="text-xl font-semibold mb-2">
-          Alterar Ponto de Reposição
-        </h2>
+      {/* Formulário para alteração do mínimo de reposição */}
+      <form onSubmit={handleChangeMinReplenishment} className="mt-8 bg-white p-4 rounded shadow-md">
+        <h2 className="text-xl font-semibold mb-2">Alterar Mínimo de Reposição</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block mb-1">EAN do Insumo</label>
             <input
               type="text"
+              placeholder="EAN"
               value={minReplenishmentEan}
               onChange={(e) => setMinReplenishmentEan(e.target.value)}
               required
@@ -357,9 +319,10 @@ const DashboardPage = () => {
             />
           </div>
           <div>
-            <label className="block mb-1">Novo Ponto de Reposição</label>
+            <label className="block mb-1">Novo Mínimo de Reposição</label>
             <input
               type="number"
+              placeholder="Novo Mínimo"
               value={newMinReplenishment}
               onChange={(e) => setNewMinReplenishment(Number(e.target.value))}
               required
@@ -367,25 +330,20 @@ const DashboardPage = () => {
             />
           </div>
         </div>
-        <button
-          type="submit"
-          className="mt-4 w-full p-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
-        >
-          Alterar Ponto de Reposição
+        <button type="submit" className="mt-4 px-4 py-2 bg-yellow-500 text-white font-semibold rounded-lg shadow-md hover:bg-yellow-600 transition-colors duration-200">
+          Alterar Mínimo de Reposição
         </button>
       </form>
 
-      {/* Formulário de Baixa de Estoque */}
-      <form
-        onSubmit={handleWriteOffStock}
-        className="mb-8 bg-white p-4 rounded shadow-md"
-      >
-        <h2 className="text-xl font-semibold mb-2">Dar Baixa no Estoque</h2>
+      {/* Formulário para baixa de estoque
+      <form onSubmit={handleWriteOffStock} className="mt-8 bg-white p-4 rounded shadow-md">
+        <h2 className="text-xl font-semibold mb-2">Baixa de Estoque</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block mb-1">EAN do Insumo</label>
             <input
               type="text"
+              placeholder="EAN"
               value={writeOffEan}
               onChange={(e) => setWriteOffEan(e.target.value)}
               required
@@ -393,9 +351,10 @@ const DashboardPage = () => {
             />
           </div>
           <div>
-            <label className="block mb-1">Quantidade para Baixa</label>
+            <label className="block mb-1">Quantidade a Dar Baixa</label>
             <input
               type="number"
+              placeholder="Quantidade"
               value={writeOffAmount}
               onChange={(e) => setWriteOffAmount(Number(e.target.value))}
               required
@@ -403,93 +362,41 @@ const DashboardPage = () => {
             />
           </div>
         </div>
-        <button
-          type="submit"
-          className="mt-4 w-full p-2 bg-red-500 text-white rounded hover:bg-red-600"
-        >
-          Dar Baixa no Estoque
+        <button type="submit" className="mt-4 px-4 py-2 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600 transition-colors duration-200">
+          Dar Baixa
         </button>
-      </form>
+      </form> */}
 
-      <input
-        type="text"
-        placeholder="Pesquisar snack..."
-        value={searchTerm}
-        onChange={handleSearchChange}
-        className="mb-4 p-2 border border-gray-300 rounded w-full"
-      />
-
-      <h2 className="text-xl font-semibold mb-2">Insumos Atuais</h2>
-      <div className="overflow-x-auto">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {snacks
-            .filter((snack) => snack.name.toLowerCase().includes(searchTerm))
-            .map((snack) => (
-              <div
-                key={snack.id}
-                className={`p-4 border border-gray-300 rounded-lg shadow-md ${
-                  snack.quantity < snack.min_replenishment
-                    ? "bg-red-50"
-                    : "bg-white"
-                }`}
-              >
-                <div className="mb-2">
-                  <span className="font-bold">Descrição do Insumo: </span>
-                  <span
-                    className={`${
-                      snack.quantity < snack.min_replenishment
-                        ? "text-red-600"
-                        : ""
-                    }`}
-                  >
-                    {snack.name}
-                  </span>
-                </div>
-                <div className="mb-2">
-                  <span className="font-bold">EAN: </span>
-                  <span
-                    className={`${
-                      snack.quantity < snack.min_replenishment
-                        ? "text-red-600"
-                        : ""
-                    }`}
-                  >
-                    {snack.ean}
-                  </span>
-                </div>
-                <div className="mb-2">
-                  <span className="font-bold">Estoque: </span>
-                  <span
-                    className={`${
-                      snack.quantity < snack.min_replenishment
-                        ? "text-red-600"
-                        : ""
-                    }`}
-                  >
-                    {snack.quantity}
-                  </span>
-                </div>
-                <div className="mb-2">
-                  <span className="font-bold">Ponto Mínimo de Reposição: </span>
-                  <span
-                    className={`${
-                      snack.quantity < snack.min_replenishment
-                        ? "text-red-600"
-                        : ""
-                    }`}
-                  >
-                    {snack.min_replenishment}
-                  </span>
-                </div>
-                <button
-                  onClick={() => handleRemoveSnack(snack.id)}
-                  className="text-red-500 hover:text-red-700 mt-2"
-                >
-                  Remover
-                </button>
-              </div>
-            ))}
-        </div>
+      <h2 className="text-xl font-semibold mb-2 mt-8">Lista de Insumos</h2>
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="Buscar por Nome ou EAN"
+          value={searchTerm}
+          onChange={handleSearchChange}
+          className="w-full p-2 border border-gray-300 rounded"
+        />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {filteredSnacks.map(snack => (
+          <div
+            key={snack.id}
+            className={`p-4 rounded shadow-md hover:shadow-lg transition-shadow duration-200 ${
+              snack.quantity < snack.min_replenishment ? "bg-red-200" : "bg-white"
+            }`}
+          >
+            <h3 className="text-lg font-semibold">{snack.name}</h3>
+            <p><strong>EAN:</strong> {snack.ean}</p>
+            <p><strong>Estoque:</strong> {snack.quantity}</p>
+            <p><strong>Mínimo de Reposição:</strong> {snack.min_replenishment}</p>
+            <button
+              onClick={() => handleRemoveSnack(snack.id)}
+              className="mt-2 text-red-600 hover:text-red-800"
+            >
+              Remover
+            </button>
+          </div>
+        ))}
       </div>
     </div>
   );
