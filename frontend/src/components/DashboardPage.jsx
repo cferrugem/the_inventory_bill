@@ -367,36 +367,85 @@ const DashboardPage = () => {
         </button>
       </form> */}
 
-      <h2 className="text-xl font-semibold mb-2 mt-8">Lista de Insumos</h2>
-      <div className="mb-4">
-        <input
-          type="text"
-          placeholder="Buscar por Nome ou EAN"
-          value={searchTerm}
-          onChange={handleSearchChange}
-          className="w-full p-2 border border-gray-300 rounded"
-        />
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredSnacks.map(snack => (
-          <div
-            key={snack.id}
-            className={`p-4 rounded shadow-md hover:shadow-lg transition-shadow duration-200 ${
-              snack.quantity < snack.min_replenishment ? "bg-red-200" : "bg-white"
-            }`}
-          >
-            <h3 className="text-lg font-semibold">{snack.name}</h3>
-            <p><strong>EAN:</strong> {snack.ean}</p>
-            <p><strong>Estoque:</strong> {snack.quantity}</p>
-            <p><strong>Mínimo de Reposição:</strong> {snack.min_replenishment}</p>
-            <button
-              onClick={() => handleRemoveSnack(snack.id)}
-              className="mt-2 text-red-600 hover:text-red-800"
-            >
-              Remover
-            </button>
-          </div>
-        ))}
+      <input
+        type="text"
+        placeholder="Pesquisar snack..."
+        value={searchTerm}
+        onChange={handleSearchChange}
+        className="mb-4 p-2 border border-gray-300 rounded w-full"
+      />
+
+      <h2 className="text-xl font-semibold mb-2">Insumos Atuais</h2>
+      <div className="overflow-x-auto">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {snacks
+            .filter((snack) => snack.name.toLowerCase().includes(searchTerm))
+            .map((snack) => (
+              <div
+                key={snack.id}
+                className={`p-4 border border-gray-300 rounded-lg shadow-md ${
+                  snack.quantity < snack.min_replenishment
+                    ? "bg-red-50"
+                    : "bg-white"
+                }`}
+              >
+                <div className="mb-2">
+                  <span className="font-bold">Descrição do Insumo: </span>
+                  <span
+                    className={`${
+                      snack.quantity < snack.min_replenishment
+                        ? "text-red-600"
+                        : ""
+                    }`}
+                  >
+                    {snack.name}
+                  </span>
+                </div>
+                <div className="mb-2">
+                  <span className="font-bold">EAN: </span>
+                  <span
+                    className={`${
+                      snack.quantity < snack.min_replenishment
+                        ? "text-red-600"
+                        : ""
+                    }`}
+                  >
+                    {snack.ean}
+                  </span>
+                </div>
+                <div className="mb-2">
+                  <span className="font-bold">Estoque: </span>
+                  <span
+                    className={`${
+                      snack.quantity < snack.min_replenishment
+                        ? "text-red-600"
+                        : ""
+                    }`}
+                  >
+                    {snack.quantity}
+                  </span>
+                </div>
+                <div className="mb-2">
+                  <span className="font-bold">Ponto Mínimo de Reposição: </span>
+                  <span
+                    className={`${
+                      snack.quantity < snack.min_replenishment
+                        ? "text-red-600"
+                        : ""
+                    }`}
+                  >
+                    {snack.min_replenishment}
+                  </span>
+                </div>
+                <button
+                  onClick={() => handleRemoveSnack(snack.id)}
+                  className="text-red-500 hover:text-red-700 mt-2"
+                >
+                  Remover
+                </button>
+              </div>
+            ))}
+        </div>
       </div>
     </div>
   );
